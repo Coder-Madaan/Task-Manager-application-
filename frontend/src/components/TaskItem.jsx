@@ -1,8 +1,15 @@
 import { format } from 'date-fns';
+import { useState } from 'react';
 import { useTask } from '../contexts/TaskContext';
 
 function TaskItem({ task }) {
   const { updateTask, deleteTask } = useTask();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedTask, setEditedTask] = useState({
+    title: task.title,
+    description: task.description,
+    priority: task.priority
+  });
 
   const priorityColors = {
     low: 'bg-blue-900 text-blue-200',
@@ -19,6 +26,80 @@ function TaskItem({ task }) {
       deleteTask(task._id);
     }
   };
+
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    setEditedTask({
+      title: task.title,
+      description: task.description,
+      priority: task.priority
+    });
+  };
+
+  const handleSave = async () => {
+    await updateTask(task._id, editedTask);
+    setIsEditing(false);
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setEditedTask(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  if (isEditing) {
+    return (
+      <div className="bg-dark-200 rounded-lg border border-dark-300 p-4">
+        <div className="space-y-4">
+          <input
+            type="text"
+            name="title"
+            value={editedTask.title}
+            onChange={handleChange}
+            className="w-full px-4 py-2 rounded-lg border border-dark-300 bg-dark-200 text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary"
+            placeholder="Task title"
+          />
+          <textarea
+            name="description"
+            value={editedTask.description}
+            onChange={handleChange}
+            className="w-full px-4 py-2 rounded-lg border border-dark-300 bg-dark-200 text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary min-h-[100px]"
+            placeholder="Task description"
+          />
+          <select
+            name="priority"
+            value={editedTask.priority}
+            onChange={handleChange}
+            className="w-full px-4 py-2 rounded-lg border border-dark-300 bg-dark-200 text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            <option value="low">Low Priority</option>
+            <option value="medium">Medium Priority</option>
+            <option value="high">High Priority</option>
+          </select>
+          <div className="flex justify-end space-x-2">
+            <button
+              onClick={handleCancel}
+              className="px-4 py-2 bg-dark-300 text-gray-300 rounded-lg hover:bg-dark-400 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              className="px-4 py-2 bg-primary text-dark-100 rounded-lg hover:bg-secondary transition-colors"
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`bg-dark-200 rounded-lg border border-dark-300 p-4 ${task.completed ? 'opacity-75' : ''}`}>
@@ -45,12 +126,20 @@ function TaskItem({ task }) {
             </div>
           </div>
         </div>
-        <button
-          onClick={handleDelete}
-          className="text-red-400 hover:text-red-300"
-        >
-          Delete
-        </button>
+        <div className="flex space-x-2">
+          <button
+            onClick={handleEdit}
+            className="text-primary hover:text-secondary"
+          >
+            Edit
+          </button>
+          <button
+            onClick={handleDelete}
+            className="text-red-400 hover:text-red-300"
+          >
+            Delete
+          </button>
+        </div>
       </div>
     </div>
   );
